@@ -77,7 +77,9 @@ def parse_registry(registry: str) -> tuple[str, int | None]:
                 raise  # Re-raise port range error
         else:
             # Empty port (e.g., "registry.io:")
-            raise ValueError(f"Invalid registry format '{registry}': port cannot be empty")
+            raise ValueError(
+                f"Invalid registry format '{registry}': port cannot be empty"
+            )
     else:
         return registry, None
 
@@ -164,7 +166,7 @@ class ContainerSpec:
     volumes: list[str] = field(default_factory=list)
     env_vars: list[str] = field(default_factory=list)
     labels: list[str] = field(default_factory=list)
-    secrets: list[dict[str, str]] = field(default_factory=list)
+    secrets: list[str] = field(default_factory=list)
     pull_always: bool = False
 
     def container_create_args(self):
@@ -185,13 +187,7 @@ class ContainerSpec:
             args.append("--label {0}".format(label))
 
         for secret in self.secrets:
-            # `name` is mandatory
-            secret_name = secret.pop("name")
-            # for the optional remaining flags, format the list of key,value pairs as
-            # ",k1=v1,k2=v2, (...)" (an empty list is prepended to create the leading comma)
-            # or as empty string if no optional flags were provided
-            secret_flags = ",".join([""] + ["=".join(i) for i in secret.items()])
-            args.append("--secret {0}{1}".format(secret_name, secret_flags))
+            args.append("--secret {0}".format(secret))
 
         if self.pull_always:
             args.append("--pull always")
@@ -332,7 +328,9 @@ def _remove_network(**kwargs):
 
 
 def _install_plugin(**kwargs):
-    command = ["docker plugin install {0} --grant-all-permissions".format(kwargs["plugin"])]
+    command = [
+        "docker plugin install {0} --grant-all-permissions".format(kwargs["plugin"])
+    ]
 
     plugin_options = kwargs["plugin_options"] if kwargs["plugin_options"] else {}
 
