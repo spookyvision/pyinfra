@@ -164,6 +164,7 @@ class ContainerSpec:
     volumes: list[str] = field(default_factory=list)
     env_vars: list[str] = field(default_factory=list)
     labels: list[str] = field(default_factory=list)
+    secrets: list[dict[str, str]] = field(default_factory=list)
     pull_always: bool = False
 
     def container_create_args(self):
@@ -182,6 +183,15 @@ class ContainerSpec:
 
         for label in self.labels:
             args.append("--label {0}".format(label))
+
+        for secret in self.secrets:
+            # `name` is mandatory
+            secret_name = secret.pop("name")
+            # for the optional remaining flags, format the list of key,value pairs as
+            # ",k1=v1,k2=v2, (...)" (an empty list is prepended to create the leading comma)
+            # or as empty string if no optional flags were provided
+            secret_flags = ",".join([""] + ["=".join(i) for i in secret.items()])
+            args.append("--secret {0}{1}".format(secret_name, secret_flags))
 
         if self.pull_always:
             args.append("--pull always")
